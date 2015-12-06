@@ -30,7 +30,9 @@
 */
 
 #include "hmac.h"
-
+#ifdef HAVE_C_UNIT_TESTS
+DECLARE_TEST_SUITE(hmac_test, "hmac functions test suite");
+#endif
 typedef struct {
     MD5Context ctx_inside;
     MD5Context ctx_outside;
@@ -81,7 +83,6 @@ pad_init(unsigned char *inner_pad, unsigned char *outer_pad,
         inner_pad[i] = key[i] ^ 0x36;
         outer_pad[i] = key[i] ^ 0x5c;
     }
-
     if(i < MAX_DIGEST_BLOCK_LEN)
     {
         while(i < MAX_DIGEST_BLOCK_LEN)
@@ -430,3 +431,224 @@ hmac_sha512(const char *msg, const unsigned int msg_len,
 
     return;
 }
+
+void
+hmac_sha3_256(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
+{
+    unsigned char inner_hash[SHA3_256_DIGEST_LEN] = {0};
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char padded_hash[2 * MAX_DIGEST_BLOCK_LEN + 1] = {0};
+    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    int final_len = hmac_key_len;
+    if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(final_key, hmac_key, final_len);
+    pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
+    //The first step is to hash the inner_pad + message
+    memcpy(padded_msg, block_inner_pad, SHA3_256_BLOCK_LEN);
+    memcpy(padded_msg + SHA3_256_BLOCK_LEN, msg, msg_len);
+
+    //Calculate the inner hash
+    FIPS202_SHA3_256(padded_msg, strlen((char*)padded_msg), inner_hash);
+
+    //Then hash the outer pad + inner hash
+    memcpy(padded_hash, block_outer_pad, SHA3_256_BLOCK_LEN);
+    memcpy(padded_hash + SHA3_256_BLOCK_LEN, inner_hash, SHA3_256_DIGEST_LEN);
+
+    //the outer hash is the final hmac
+    FIPS202_SHA3_256(padded_hash, strlen((char*)padded_hash), hmac);
+
+    free(padded_msg);
+}
+
+void
+hmac_sha3_512(const char *msg, const unsigned int msg_len,
+    unsigned char *hmac, const char *hmac_key, const int hmac_key_len)
+{
+    unsigned char inner_hash[SHA3_512_DIGEST_LEN] = {0};
+    unsigned char block_inner_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char block_outer_pad[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
+    unsigned char padded_hash[SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN + 1] = {0};
+    unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
+
+    int final_len = hmac_key_len;
+
+    if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
+        final_len = MAX_DIGEST_BLOCK_LEN;
+
+    memcpy(final_key, hmac_key, final_len);
+    pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
+
+    //The first step is to hash the inner_pad + message
+    memcpy(padded_msg, block_inner_pad, SHA3_512_BLOCK_LEN);
+    memcpy(padded_msg + SHA3_512_BLOCK_LEN, msg, msg_len);
+
+    //Calculate the inner hash
+    FIPS202_SHA3_512(padded_msg, msg_len + SHA3_512_BLOCK_LEN, inner_hash);
+
+    //Then hash the outer pad + inner hash
+    memcpy(padded_hash, block_outer_pad, SHA3_512_BLOCK_LEN);
+    memcpy(padded_hash + SHA3_512_BLOCK_LEN, inner_hash, SHA3_512_DIGEST_LEN);
+
+    //the outer hash is the final hmac
+    FIPS202_SHA3_512(padded_hash, strlen((char*)padded_hash), hmac);
+
+    free(padded_msg);
+}
+
+#ifdef HAVE_C_UNIT_TESTS
+
+DECLARE_UTEST(test_hmac_md5_1, "hmac_md5 test vector 1")
+{
+    char msg[1024] = {0};
+    unsigned char hmac[1024] = {0};
+    char hmac_txt[1024] = {0};
+    char hmac_key[1024] = {0};
+    char expected_hmac[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "Hi There");
+    strcpy(expected_hmac, "9294727a3638bb1c13f48ef8158bfc9d");
+    strcpy(hmac_key, "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b");
+
+    hmac_md5(msg, strlen(msg), (unsigned char *)hmac, hmac_key, strlen(hmac_key));
+
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac, MD5_DIGEST_LEN) == 0);
+    printf("output was: %s\n", hmac_txt);
+}
+
+DECLARE_UTEST(test_hmac_sha1_1, "hmac_sha1 test vector 1")
+{
+    char msg[1024] = {0};
+    unsigned char hmac[1024] = {0};
+    char hmac_txt[1024] = {0};
+    char hmac_key[1024] = {0};
+    char expected_hmac[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "Hi There");
+    strcpy(expected_hmac, "b617318655057264e28bc0b6fb378c8ef146be00");
+    strcpy(hmac_key, "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b");
+
+    hmac_sha1(msg, strlen(msg), (unsigned char *)hmac, hmac_key, strlen(hmac_key));
+
+    for ( i = 0; i < SHA1_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac, SHA1_DIGEST_LEN) == 0);
+}
+
+DECLARE_UTEST(test_hmac_sha3_256_1, "hmac_sha3_256 test vector 1")
+{
+    char msg[1024] = {0};
+    unsigned char hmac[1024] = {0};
+    char hmac_txt[1024] = {0};
+    char hmac_key[1024] = {0};
+    char expected_hmac[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "Hi There");
+    strcpy(expected_hmac, "ba85192310dffa96e2a3a40e69774351140bb7185e1202cdcc917589f95e16bb");
+    strcpy(hmac_key, "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b");
+
+    hmac_sha3_256(msg, strlen(msg), (unsigned char *)hmac, hmac_key, strlen(hmac_key));
+
+    for ( i = 0; i < SHA3_256_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac, 64) == 0);
+}
+
+DECLARE_UTEST(test_hmac_sha3_512_1, "hmac_sha3_512 test vector 1")
+{
+    char msg[1024] = {0};
+    unsigned char hmac[1024] = {0};
+    char hmac_txt[1024] = {0};
+    char hmac_key[1024] = {0};
+    char expected_hmac[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "Hi There");
+    strcpy(expected_hmac, "eb3fbd4b2eaab8f5c504bd3a41465aacec15770a7cabac531e482f860b5ec7ba47ccb2c6f2afce8f88d22b6dc61380f23a668fd3888bb80537c0a0b86407689e");
+    strcpy(hmac_key, "\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b\x0b");
+
+    hmac_sha3_512(msg, strlen(msg), (unsigned char *)hmac, hmac_key, strlen(hmac_key));
+
+    for ( i = 0; i < SHA3_512_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac, 128) == 0);
+}
+DECLARE_UTEST(test_hmac_sha3_256_2, "hmac_sha3_256 test vector 2")
+{
+    char msg[1024] = {0};
+    unsigned char hmac[1024] = {0};
+    char hmac_txt[1024] = {0};
+    char hmac_key[1024] = {0};
+    char expected_hmac[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "what do ya want for nothing?");
+    strcpy(expected_hmac, "c7d4072e788877ae3596bbb0da73b887c9171f93095b294ae857fbe2645e1ba5");
+    strcpy(hmac_key, "Jefe");
+
+    hmac_sha3_256(msg, strlen(msg), (unsigned char *)hmac, hmac_key, strlen(hmac_key));
+
+    for ( i = 0; i < SHA3_256_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac, 64) == 0);
+}
+
+DECLARE_UTEST(test_hmac_sha3_512_2, "hmac_sha3_512 test vector 2")
+{
+    char msg[1024] = {0};
+    unsigned char hmac[1024] = {0};
+    char hmac_txt[1024] = {0};
+    char hmac_key[1024] = {0};
+    char expected_hmac[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "what do ya want for nothing?");
+    strcpy(expected_hmac, "5a4bfeab6166427c7a3647b747292b8384537cdb89afb3bf5665e4c5e709350b287baec921fd7ca0ee7a0c31d022a95e1fc92ba9d77df883960275beb4e62024");
+    strcpy(hmac_key, "Jefe");
+
+    hmac_sha3_512(msg, strlen(msg), (unsigned char *)hmac, hmac_key, strlen(hmac_key));
+
+    for ( i = 0; i < SHA3_512_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac, 128) == 0);
+}
+
+int register_ts_hmac_test(void)
+{
+    ts_init(&TEST_SUITE(hmac_test), TEST_SUITE_DESCR(hmac_test), NULL, NULL);
+    ts_add_utest(&TEST_SUITE(hmac_test), UTEST_FCT(test_hmac_md5_1), UTEST_DESCR(test_hmac_md5_1));
+    ts_add_utest(&TEST_SUITE(hmac_test), UTEST_FCT(test_hmac_sha1_1), UTEST_DESCR(test_hmac_sha1_1));
+    ts_add_utest(&TEST_SUITE(hmac_test), UTEST_FCT(test_hmac_sha3_256_1), UTEST_DESCR(test_hmac_sha3_256_1));
+    ts_add_utest(&TEST_SUITE(hmac_test), UTEST_FCT(test_hmac_sha3_512_1), UTEST_DESCR(test_hmac_sha3_512_1));
+    ts_add_utest(&TEST_SUITE(hmac_test), UTEST_FCT(test_hmac_sha3_256_2), UTEST_DESCR(test_hmac_sha3_256_2));
+    ts_add_utest(&TEST_SUITE(hmac_test), UTEST_FCT(test_hmac_sha3_512_2), UTEST_DESCR(test_hmac_sha3_512_2));
+
+    return register_ts(&TEST_SUITE(hmac_test));
+}
+
+#endif /* HAVE_C_UNIT_TESTS */
+

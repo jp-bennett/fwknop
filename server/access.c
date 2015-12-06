@@ -1530,7 +1530,7 @@ parse_access_file(fko_srv_options_t *opts)
             if(curr_acc->hmac_type < 0)
             {
                 log_msg(LOG_ERR,
-                    "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512}",
+                    "[*] HMAC_DIGEST_TYPE argument '%s' must be one of {md5,sha1,sha256,sha384,sha512,sha3_256,sha3_512}",
                     val);
                 fclose(file_ptr);
                 clean_exit(opts, NO_FW_CLEANUP, EXIT_FAILURE);

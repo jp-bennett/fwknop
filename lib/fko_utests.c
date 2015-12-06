@@ -11,6 +11,7 @@
 static void register_test_suites(void)
 {
     register_ts_fko_decode();
+    register_ts_hmac_test();
 }
 
 /* The main() function for setting up and running the tests.
