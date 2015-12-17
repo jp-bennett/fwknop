@@ -319,10 +319,16 @@ hmac_sha384_init(hmac_sha384_ctx *ctx, const char *key, const int key_len)
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
-    /* When we eventually support arbitrary key sizes, take the digest
-     * of the key with: sha384(final_key, init_key, final_len);
-    */
-    memcpy(final_key, key, final_len);
+    if(SHA384_BLOCK_LEN < key_len)
+    {
+        /* Calculate the digest of the key
+        */
+        sha384(final_key, (unsigned char *)key, final_len);
+    }
+    else
+    {
+        memcpy(final_key, key, key_len);
+    }
 
     pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
@@ -381,10 +387,17 @@ hmac_sha512_init(hmac_sha512_ctx *ctx, const char *key, const int key_len)
     if(key_len > MAX_DIGEST_BLOCK_LEN)
         final_len = MAX_DIGEST_BLOCK_LEN;
 
-    /* When we eventually support arbitrary key sizes, take the digest
-     * of the key with: sha512(final_key, init_key, final_len);
-    */
-    memcpy(final_key, key, final_len);
+    if(SHA512_BLOCK_LEN < key_len)
+    {
+        /* Calculate the digest of the key
+        */
+        sha512(final_key, (unsigned char *)key, final_len);
+        final_len = SHA512_DIGEST_LEN;
+    }
+    else
+    {
+        memcpy(final_key, key, key_len);
+    }
 
     pad_init(ctx->block_inner_pad, ctx->block_outer_pad, final_key, final_len);
 
@@ -1270,7 +1283,9 @@ DECLARE_UTEST(test_hmac_sha3_256, "hmac_sha3_256 test vectors") //http://wolfgan
     char expected_hmac4[1024] = {0};
     char expected_hmac5[1024] = {0};
     char expected_hmac6[1024] = {0};
+    char expected_hmac6a[1024] = {0};
     char expected_hmac7[1024] = {0};
+    char expected_hmac7a[1024] = {0};
     int msg_len, key_len;
     int i = 0;
 
@@ -1382,6 +1397,24 @@ DECLARE_UTEST(test_hmac_sha3_256, "hmac_sha3_256 test vectors") //http://wolfgan
     }
     CU_ASSERT(memcmp(hmac_txt, expected_hmac6, SHA3_256_DIGEST_LEN) == 0);
 
+    //vector 6a
+    for ( i = 0; i < 147; i++)
+    {
+        hmac_key[i] = 0xaa;
+    }
+    key_len = 147;
+    strcpy(msg, "Test Using Larger Than Block-Size Key - Hash Key First");
+    msg_len = 54;
+    strcpy(expected_hmac6a, "a6072f86de52b38bb349fe84cd6d97fb6a37c4c0f62aae93981193a7229d3467");
+
+    hmac_sha3_256(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
+
+    for ( i = 0; i < SHA3_256_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac6a, SHA3_256_DIGEST_LEN) == 0);
+
     //vector 7
     for ( i = 0; i < 131; i++)
     {
@@ -1390,7 +1423,7 @@ DECLARE_UTEST(test_hmac_sha3_256, "hmac_sha3_256 test vectors") //http://wolfgan
     key_len = 131;
     strcpy(msg, "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.");
     msg_len = strlen(msg);
-    strcpy(expected_hmac7, "65c5b06d4c3de32a7aef8763261e49adb6e2293ec8e7c61e8de61701fc63e123");
+    strcpy(expected_hmac7, "e6a36d9b915f86a093cac7d110e9e04cf1d6100d30475509c2475f571b758b5a");
 
     hmac_sha3_256(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
 
@@ -1399,6 +1432,24 @@ DECLARE_UTEST(test_hmac_sha3_256, "hmac_sha3_256 test vectors") //http://wolfgan
         sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
     }
     CU_ASSERT(memcmp(hmac_txt, expected_hmac7, SHA3_256_DIGEST_LEN) == 0);
+
+    //vector 7a
+    for ( i = 0; i < 147; i++)
+    {
+        hmac_key[i] = 0xaa;
+    }
+    key_len = 147;
+    strcpy(msg, "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.");
+    msg_len = strlen(msg);
+    strcpy(expected_hmac7a, "e6a36d9b915f86a093cac7d110e9e04cf1d6100d30475509c2475f571b758b5a");
+
+    hmac_sha3_256(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
+
+    for ( i = 0; i < SHA3_256_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac7a, SHA3_256_DIGEST_LEN) == 0);
 }
 
 DECLARE_UTEST(test_hmac_sha3_512, "hmac_sha3_512 test vectors")
@@ -1413,7 +1464,9 @@ DECLARE_UTEST(test_hmac_sha3_512, "hmac_sha3_512 test vectors")
     char expected_hmac4[1024] = {0};
     char expected_hmac5[1024] = {0};
     char expected_hmac6[1024] = {0};
+    char expected_hmac6a[1024] = {0};
     char expected_hmac7[1024] = {0};
+    char expected_hmac7a[1024] = {0};
     int msg_len, key_len;
     int i = 0;
 
@@ -1525,6 +1578,24 @@ DECLARE_UTEST(test_hmac_sha3_512, "hmac_sha3_512 test vectors")
     }
     CU_ASSERT(memcmp(hmac_txt, expected_hmac6, SHA3_512_DIGEST_LEN) == 0);
 
+    //vector 6a
+    for ( i = 0; i < 147; i++)
+    {
+        hmac_key[i] = 0xaa;
+    }
+    key_len = 147;
+    strcpy(msg, "Test Using Larger Than Block-Size Key - Hash Key First");
+    msg_len = 54;
+    strcpy(expected_hmac6a, "b14835c819a290efb010ace6d8568dc6b84de60bc49b004c3b13eda763589451e5dd74292884d1bdce64e6b919dd61dc9c56a282a81c0bd14f1f365b49b83a5b");
+
+    hmac_sha3_512(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
+
+    for ( i = 0; i < SHA3_512_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac6a, SHA3_512_DIGEST_LEN) == 0);
+
     //vector 7
     for ( i = 0; i < 131; i++)
     {
@@ -1542,6 +1613,24 @@ DECLARE_UTEST(test_hmac_sha3_512, "hmac_sha3_512 test vectors")
         sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
     }
     CU_ASSERT(memcmp(hmac_txt, expected_hmac7, SHA3_512_DIGEST_LEN) == 0);
+
+    //vector 7a
+    for ( i = 0; i < 147; i++)
+    {
+        hmac_key[i] = 0xaa;
+    }
+    key_len = 147;
+    strcpy(msg, "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.");
+    msg_len = strlen(msg);
+    strcpy(expected_hmac7a, "dc030ee7887034f32cf402df34622f311f3e6cf04860c6bbd7fa488674782b4659fdbdf3fd877852885cfe6e22185fe7b2ee952043629bc9d5f3298a41d02c66");
+
+    hmac_sha3_512(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
+
+    for ( i = 0; i < SHA3_512_DIGEST_LEN; i++)
+    {
+        sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
+    }
+    CU_ASSERT(memcmp(hmac_txt, expected_hmac7a, SHA3_512_DIGEST_LEN) == 0);
 }
 
 int register_ts_hmac_test(void)
