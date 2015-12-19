@@ -50,7 +50,7 @@
 #endif
 
 #ifdef HAVE_C_UNIT_TESTS
-DECLARE_TEST_SUITE(digest_test, "digest functions test suite");
+DECLARE_TEST_SUITE(digest_test, "Cipher functions test suite");
 #endif
 
 /* Get random data.

@@ -198,17 +198,268 @@ DECLARE_UTEST(test_md5, "md5 test vectors") //https://tools.ietf.org/html/rfc132
     char msg[1024] = {0};
     unsigned char digest[1024] = {0};
     char digest_txt[1024] = {0};
-    char expected_digest[1024] = {0};
+    char expected_digest1[1024] = {0};
+    char expected_digest2[1024] = {0};
+    char expected_digest3[1024] = {0};
+    char expected_digest4[1024] = {0};
+    char expected_digest5[1024] = {0};
+    char expected_digest6[1024] = {0};
+    char expected_digest7[1024] = {0};
     int i = 0;
 
-    strcpy(msg, "abc");
-    strcpy(expected_digest, "900150983cd24fb0d6963f7d28e17f72");
+    strcpy(expected_digest1, "d41d8cd98f00b204e9800998ecf8427e");
+    strcpy(expected_digest2, "0cc175b9c0f1b6a831c399e269772661");
+    strcpy(expected_digest3, "900150983cd24fb0d6963f7d28e17f72");
+    strcpy(expected_digest4, "f96b697d7cb7938d525a2f31aaf161d0");
+    strcpy(expected_digest5, "c3fcd3d76192e4007dfb496cca67e13b");
+    strcpy(expected_digest6, "d174ab98d277d9f5a5611c2c9f419d9f");
+    strcpy(expected_digest7, "57edf4a22be3c955ac49da2e2107b67a");
+
+    strcpy(msg, "");
     md5(digest, (unsigned char *)msg, strlen(msg));
     for ( i = 0; i < MD5_DIGEST_LEN; i++)
     {
         sprintf(digest_txt + (2 * i), "%02x", digest[i]);
     }
-    CU_ASSERT(memcmp(digest_txt, expected_digest, MD5_DIGEST_LEN) == 0);
+    CU_ASSERT(memcmp(digest_txt, expected_digest1, MD5_DIGEST_LEN) == 0);
+
+    strcpy(msg, "a");
+    md5(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest2, MD5_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abc");
+    md5(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest3, MD5_DIGEST_LEN) == 0);
+
+    strcpy(msg, "message digest");
+    md5(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest4, MD5_DIGEST_LEN) == 0);
+    strcpy(msg, "abcdefghijklmnopqrstuvwxyz");
+    md5(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest5, MD5_DIGEST_LEN) == 0);
+    strcpy(msg, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+    md5(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest6, MD5_DIGEST_LEN) == 0);
+    strcpy(msg, "12345678901234567890123456789012345678901234567890123456789012345678901234567890");
+    md5(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < MD5_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest7, MD5_DIGEST_LEN) == 0);
+
+}
+
+DECLARE_UTEST(test_sha1, "sha1 test vectors") //http://www.di-mgt.com.au/sha_testvectors.html
+{
+    char msg[1024] = {0};
+    unsigned char digest[1024] = {0};
+    char digest_txt[1024] = {0};
+    char expected_digest1[1024] = {0};
+    char expected_digest2[1024] = {0};
+    char expected_digest3[1024] = {0};
+    char expected_digest4[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "abc");
+    strcpy(expected_digest1, "a9993e364706816aba3e25717850c26c9cd0d89d");
+    sha1(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA1_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest1, SHA1_DIGEST_LEN) == 0);
+
+    strcpy(msg, "");
+    strcpy(expected_digest2, "da39a3ee5e6b4b0d3255bfef95601890afd80709");
+    sha1(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA1_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest2, SHA1_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+    strcpy(expected_digest3, "84983e441c3bd26ebaae4aa1f95129e5e54670f1");
+    sha1(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA1_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest3, SHA1_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+    strcpy(expected_digest4, "a49b2446a02c645bf419f995b67091253a04a259");
+    sha1(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA1_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest4, SHA1_DIGEST_LEN) == 0);
+
+}
+DECLARE_UTEST(test_sha256, "sha-256 test vectors") //http://www.di-mgt.com.au/sha_testvectors.html
+{
+    char msg[1024] = {0};
+    unsigned char digest[1024] = {0};
+    char digest_txt[1024] = {0};
+    char expected_digest1[1024] = {0};
+    char expected_digest2[1024] = {0};
+    char expected_digest3[1024] = {0};
+    char expected_digest4[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "abc");
+    strcpy(expected_digest1, "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad");
+    sha256(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA256_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest1, SHA256_DIGEST_LEN) == 0);
+
+    strcpy(msg, "");
+    strcpy(expected_digest2, "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    sha256(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA256_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest2, SHA256_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+    strcpy(expected_digest3, "248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1");
+    sha256(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA256_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest3, SHA256_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+    strcpy(expected_digest4, "cf5b16a778af8380036ce59e7b0492370b249b11e8f07a51afac45037afee9d1");
+    sha256(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA256_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest4, SHA256_DIGEST_LEN) == 0);
+}
+DECLARE_UTEST(test_sha384, "sha-384 test vectors") //http://www.di-mgt.com.au/sha_testvectors.html
+{
+    char msg[1024] = {0};
+    unsigned char digest[1024] = {0};
+    char digest_txt[1024] = {0};
+    char expected_digest1[1024] = {0};
+    char expected_digest2[1024] = {0};
+    char expected_digest3[1024] = {0};
+    char expected_digest4[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "abc");
+    strcpy(expected_digest1, "cb00753f45a35e8bb5a03d699ac65007272c32ab0eded1631a8b605a43ff5bed8086072ba1e7cc2358baeca134c825a7");
+    sha384(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA384_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest1, SHA384_DIGEST_LEN) == 0);
+
+    strcpy(msg, "");
+    strcpy(expected_digest2, "38b060a751ac96384cd9327eb1b1e36a21fdb71114be07434c0cc7bf63f6e1da274edebfe76f65fbd51ad2f14898b95b");
+    sha384(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA384_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest2, SHA384_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+    strcpy(expected_digest3, "3391fdddfc8dc7393707a65b1b4709397cf8b1d162af05abfe8f450de5f36bc6b0455a8520bc4e6f5fe95b1fe3c8452b");
+    sha384(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA384_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest3, SHA384_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+    strcpy(expected_digest4, "09330c33f71147e83d192fc782cd1b4753111b173b3b05d22fa08086e3b0f712fcc7c71a557e2db966c3e9fa91746039");
+    sha384(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA384_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest4, SHA384_DIGEST_LEN) == 0);
+
+}
+DECLARE_UTEST(test_sha512, "sha-512 test vectors") //http://www.di-mgt.com.au/sha_testvectors.html
+{
+    char msg[1024] = {0};
+    unsigned char digest[1024] = {0};
+    char digest_txt[1024] = {0};
+    char expected_digest1[1024] = {0};
+    char expected_digest2[1024] = {0};
+    char expected_digest3[1024] = {0};
+    char expected_digest4[1024] = {0};
+    int i = 0;
+
+    strcpy(msg, "abc");
+    strcpy(expected_digest1, "ddaf35a193617abacc417349ae20413112e6fa4e89a97ea20a9eeee64b55d39a2192992a274fc1a836ba3c23a3feebbd454d4423643ce80e2a9ac94fa54ca49f");
+    sha512(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA512_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest1, SHA512_DIGEST_LEN) == 0);
+
+    strcpy(msg, "");
+    strcpy(expected_digest2, "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e");
+    sha512(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA512_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest2, SHA512_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq");
+    strcpy(expected_digest3, "204a8fc6dda82f0a0ced7beb8e08a41657c16ef468b228a8279be331a703c33596fd15c13b1b07f9aa1d3bea57789ca031ad85c7a71dd70354ec631238ca3445");
+    sha512(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA512_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest3, SHA512_DIGEST_LEN) == 0);
+
+    strcpy(msg, "abcdefghbcdefghicdefghijdefghijkefghijklfghijklmghijklmnhijklmnoijklmnopjklmnopqklmnopqrlmnopqrsmnopqrstnopqrstu");
+    strcpy(expected_digest4, "8e959b75dae313da8cf4f72814fc143f8f7779c6eb9f7fa17299aeadb6889018501d289e4900f7e4331b99dec4b5433ac7d329eeb6dd26545e96e55b874be909");
+    sha512(digest, (unsigned char *)msg, strlen(msg));
+    for ( i = 0; i < SHA512_DIGEST_LEN; i++)
+    {
+        sprintf(digest_txt + (2 * i), "%02x", digest[i]);
+    }
+    CU_ASSERT(memcmp(digest_txt, expected_digest4, SHA512_DIGEST_LEN) == 0);
+
 }
 
 DECLARE_UTEST(test_sha3_256, "sha3_256 test vectors") //http://www.di-mgt.com.au/sha_testvectors.html
@@ -313,6 +564,10 @@ int register_ts_digest_test(void)
 {
     ts_init(&TEST_SUITE(digest_test), TEST_SUITE_DESCR(digest_test), NULL, NULL);
     ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_md5), UTEST_DESCR(test_md5));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_sha1), UTEST_DESCR(test_sha1));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_sha256), UTEST_DESCR(test_sha256));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_sha384), UTEST_DESCR(test_sha384));
+    ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_sha512), UTEST_DESCR(test_sha512));
     ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_sha3_256), UTEST_DESCR(test_sha3_256));
     ts_add_utest(&TEST_SUITE(digest_test), UTEST_FCT(test_sha3_512), UTEST_DESCR(test_sha3_512));
 
