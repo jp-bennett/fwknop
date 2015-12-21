@@ -455,10 +455,8 @@ hmac_sha3_256(const char *msg, const unsigned int msg_len,
     unsigned char final_key[MAX_DIGEST_BLOCK_LEN] = {0};
     unsigned char padded_hash[2 * MAX_DIGEST_BLOCK_LEN + 1] = {0};
     unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
-
     int final_len = hmac_key_len;
-//    if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
-//        final_len = MAX_DIGEST_BLOCK_LEN;
+
     if(SHA3_256_BLOCK_LEN < hmac_key_len)
     {
         /* Calculate the digest of the key
@@ -471,20 +469,19 @@ hmac_sha3_256(const char *msg, const unsigned int msg_len,
         memcpy(final_key, hmac_key, hmac_key_len);
     }
     pad_init(block_inner_pad, block_outer_pad, final_key, final_len);
-
     //The first step is to hash the inner_pad + message
     memcpy(padded_msg, block_inner_pad, SHA3_256_BLOCK_LEN);
     memcpy(padded_msg + SHA3_256_BLOCK_LEN, msg, msg_len);
 
     //Calculate the inner hash
-    FIPS202_SHA3_256(padded_msg, strlen((char*)padded_msg), inner_hash);
+    FIPS202_SHA3_256(padded_msg, msg_len + SHA3_256_BLOCK_LEN, inner_hash);
 
     //Then hash the outer pad + inner hash
     memcpy(padded_hash, block_outer_pad, SHA3_256_BLOCK_LEN);
     memcpy(padded_hash + SHA3_256_BLOCK_LEN, inner_hash, SHA3_256_DIGEST_LEN);
 
     //the outer hash is the final hmac
-    FIPS202_SHA3_256(padded_hash, strlen((char*)padded_hash), hmac);
+    FIPS202_SHA3_256(padded_hash, SHA3_256_BLOCK_LEN + SHA3_256_DIGEST_LEN, hmac);
 
     free(padded_msg);
 }
@@ -501,9 +498,6 @@ hmac_sha3_512(const char *msg, const unsigned int msg_len,
     unsigned char *padded_msg = malloc(msg_len + MAX_DIGEST_BLOCK_LEN + 1);
 
     int final_len = hmac_key_len;
-
-//    if(hmac_key_len > MAX_DIGEST_BLOCK_LEN)
-//        final_len = MAX_DIGEST_BLOCK_LEN;
 
     if(SHA3_512_BLOCK_LEN < hmac_key_len)
     {
@@ -530,7 +524,7 @@ hmac_sha3_512(const char *msg, const unsigned int msg_len,
     memcpy(padded_hash + SHA3_512_BLOCK_LEN, inner_hash, SHA3_512_DIGEST_LEN);
 
     //the outer hash is the final hmac
-    FIPS202_SHA3_512(padded_hash, strlen((char*)padded_hash), hmac);
+    FIPS202_SHA3_512(padded_hash, SHA3_512_BLOCK_LEN + SHA3_512_DIGEST_LEN, hmac);
 
     free(padded_msg);
 }
@@ -1352,7 +1346,7 @@ DECLARE_UTEST(test_hmac_sha3_256, "hmac_sha3_256 test vectors") //http://wolfgan
 
     hmac_sha3_256(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
 
-    for ( i = 0; i < 16; i++)
+    for ( i = 0; i < SHA3_256_DIGEST_LEN; i++)
     {
         sprintf(hmac_txt + (2 * i), "%02x", hmac[i]);
     }
@@ -1402,7 +1396,7 @@ DECLARE_UTEST(test_hmac_sha3_256, "hmac_sha3_256 test vectors") //http://wolfgan
     key_len = 131;
     strcpy(msg, "This is a test using a larger than block-size key and a larger than block-size data. The key needs to be hashed before being used by the HMAC algorithm.");
     msg_len = strlen(msg);
-    strcpy(expected_hmac7, "e6a36d9b915f86a093cac7d110e9e04cf1d6100d30475509c2475f571b758b5a");
+    strcpy(expected_hmac7, "65c5b06d4c3de32a7aef8763261e49adb6e2293ec8e7c61e8de61701fc63e123");
 
     hmac_sha3_256(msg, msg_len, (unsigned char *)hmac, hmac_key, key_len);
 
